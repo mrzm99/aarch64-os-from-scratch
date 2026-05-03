@@ -1,19 +1,19 @@
 /*------------------------------------------------------*/
 /*!
- *      @file   main.c
+ *      @file   util.h
  *      @date   2026.xx.xx
  *      @author mrzm99
- *      @brief  kernl entry point
+ *      @brief
  *      @note
  */
 /*------------------------------------------------------*/
-#include "../include/util.h"
+
+#ifndef __UTIL_H__
+#define __UTIL_H__
 
 /*------------------------------------------------------*/
-/*! @brief  kernel entry point
+/*! @brief  print
  */
-void kernel_main()
-{
-    printk("Hello World\n");
-    while (1);
-}
+void printk(const char *format, ...);
+
+#endif
