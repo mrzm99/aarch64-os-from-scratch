@@ -28,7 +28,9 @@ ASM_SRCS = \
 		   arch/aarch64/boot.S
 
 C_SRCS = \
-		 kernel/main.c
+		 kernel/main.c \
+		 arch/aarch64/uart.c \
+		 kernel/printk.c
 
 # オブジェクトファイル名の生成
 ASM_OBJS = $(patsubst %.S, $(BUILD_DIR)/%.o, $(ASM_SRCS))
