@@ -42,7 +42,7 @@ set_vector_table_el1:
     stp x18, x19, [sp, #16 *  9]                /**/
     stp x20, x21, [sp, #16 * 10]                /**/
     stp x22, x23, [sp, #16 * 11]                /**/
-    stp x24, x26, [sp, #16 * 12]                /**/
+    stp x24, x25, [sp, #16 * 12]                /**/
     stp x26, x27, [sp, #16 * 13]                /**/
     stp x28, x29, [sp, #16 * 14]                /**/
     str x30,      [sp, #16 * 15]                /**/
@@ -66,6 +66,7 @@ set_vector_table_el1:
     ldp x4,  x5,  [sp, #16 *  2]                /**/
     ldp x2,  x3,  [sp, #16 *  1]                /**/
     ldp x0,  x1,  [sp, #16 *  0]                /**/
+    add sp, sp, #256                            /**/
     eret                                        /**/
 .endm
 
