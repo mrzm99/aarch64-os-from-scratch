@@ -32,7 +32,8 @@ C_SRCS = \
 		 kernel/main.c \
 		 arch/aarch64/uart.c \
 		 kernel/printk.c \
-		 kernel/exception.c
+		 kernel/exception.c \
+		 kernel/mm/pmm.c
 
 # オブジェクトファイル名の生成
 ASM_OBJS = $(patsubst %.S, $(BUILD_DIR)/%.o, $(ASM_SRCS))

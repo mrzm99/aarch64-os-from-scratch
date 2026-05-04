@@ -23,4 +23,9 @@ void enable_exception();
 void disable_exception();
 void set_vector_table_el(unsigned long vector_table);
 
+/*------------------------------------------------------*/
+/*! @brief  do align
+ */
+#define mem_align(addr, size)           ((addr + (size - 1)) & (~(size - 1)))
+
 #endif

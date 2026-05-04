@@ -46,4 +46,8 @@ SECTIONS
         *(.bss)
         __bss_end = .;
     } :data_seg
+
+    /* for page allocator */
+    . = ALIGN(4096);
+    __kernel_end = .;
 }

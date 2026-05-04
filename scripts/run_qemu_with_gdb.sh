@@ -12,7 +12,7 @@
 qemu-system-aarch64 \
     -M virt \
     -cpu cortex-a55 \
-    -m 4096M \
+    -m 1024M \
     -nographic \
     -kernel build/os.elf \
     -s -S
