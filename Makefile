@@ -25,12 +25,14 @@ LDFLAGS = -T scripts/linker_script.ld
 
 # ソースファイル
 ASM_SRCS = \
-		   arch/aarch64/boot.S
+		   arch/aarch64/boot.S \
+		   arch/aarch64/exception.S
 
 C_SRCS = \
 		 kernel/main.c \
 		 arch/aarch64/uart.c \
-		 kernel/printk.c
+		 kernel/printk.c \
+		 kernel/exception.c
 
 # オブジェクトファイル名の生成
 ASM_OBJS = $(patsubst %.S, $(BUILD_DIR)/%.o, $(ASM_SRCS))
