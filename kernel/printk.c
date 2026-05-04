@@ -30,7 +30,7 @@ static void print_number(unsigned int val, int base)
         if (rem < 10) {
             buff[i] = '0' + rem;
         } else {
-            buff[i] = 'a' + rem;
+            buff[i] = 'a' + (rem - 10);
         }
 
         i++;
