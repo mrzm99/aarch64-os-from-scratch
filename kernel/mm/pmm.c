@@ -12,16 +12,12 @@
 #include <stdio.h>
 #include "../../board/virt/board.h"
 #include "../../include/util.h"
+#include "../../include/config.h"
 
 /*------------------------------------------------------*/
 /*! @brief  external symbol
  */
 extern char __kernel_end[];
-
-/*------------------------------------------------------*/
-/*! @brief  internal symbol
- */
-#define PAGE_SIZE                           (4096)
 
 /*------------------------------------------------------*/
 /*! @brief  header struct
