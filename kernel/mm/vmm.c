@@ -53,11 +53,11 @@ void create_mapping(pgd_t *p_pgd, uint64_t va, uint64_t pa, uint64_t prot)
     if (*p_pgd_entry == 0) {
         pgd_t *p_new_pud = pmm_get_free_page();
         memzero(p_new_pud, PAGE_SIZE);
-        *p_pgd_entry = ((uint64_t)p_new_pud & PAGE_MASK) | PTE_VALID | PTE_TABLE;
+        *p_pgd_entry = (v2p((uint64_t)p_new_pud) & PAGE_MASK) | PTE_VALID | PTE_TABLE;
     }
 
     // get PUD entry
-    pud_t *p_pud = (pud_t*)((*p_pgd_entry) & PAGE_MASK);
+    pud_t *p_pud = (pud_t*)(p2v((*p_pgd_entry) & PAGE_MASK));
     uint64_t pud_idx = get_pud_idx(va);
     pud_t *p_pud_entry = &p_pud[pud_idx];
 
@@ -65,11 +65,11 @@ void create_mapping(pgd_t *p_pgd, uint64_t va, uint64_t pa, uint64_t prot)
     if (*p_pud_entry == 0) {
         pmd_t *p_new_pmd = (pmd_t*)pmm_get_free_page();
         memzero(p_new_pmd, PAGE_SIZE);
-        *p_pud_entry = ((uint64_t)p_new_pmd & PAGE_MASK) | PTE_VALID | PTE_TABLE;
+        *p_pud_entry = (v2p((uint64_t)p_new_pmd) & PAGE_MASK) | PTE_VALID | PTE_TABLE;
     }
 
     // get PMD entry
-    pmd_t *p_pmd = (pmd_t*)((*p_pud_entry) & PAGE_MASK);
+    pmd_t *p_pmd = (pmd_t*)p2v(((*p_pud_entry) & PAGE_MASK));
     uint64_t pmd_idx = get_pmd_idx(va);
     pmd_t *p_pmd_entry = &p_pmd[pmd_idx];
 
@@ -77,11 +77,11 @@ void create_mapping(pgd_t *p_pgd, uint64_t va, uint64_t pa, uint64_t prot)
     if (*p_pmd_entry == 0) {
         pte_t *p_new_pte = (pte_t*)pmm_get_free_page();
         memzero(p_new_pte, PAGE_SIZE);
-        *p_pmd_entry = ((uint64_t)p_new_pte & PAGE_MASK) | PTE_VALID | PTE_TABLE;
+        *p_pmd_entry = (v2p((uint64_t)p_new_pte) & PAGE_MASK) | PTE_VALID | PTE_TABLE;
     }
 
     // set physical address to PTE
-    pte_t *p_pte = (pte_t*)((*p_pmd_entry) & PAGE_MASK);
+    pte_t *p_pte = (pte_t*)p2v(((*p_pmd_entry)) & PAGE_MASK);
     uint64_t pte_idx = get_pte_idx(va);
 
     p_pte[pte_idx] = (pa & PAGE_MASK) | prot;
@@ -96,17 +96,16 @@ pgd_t *setup_page_tables()
     pgd_t *p_kernel_pgd = (pgd_t*)pmm_get_free_page();
     memzero(p_kernel_pgd, PAGE_SIZE);
 
-    // get RAM address
-    uint64_t ddr_start = DDR_START;
-
     // mapping Normal Memory (16M)
-    for (uint64_t offset = 0; offset < DDR_END; offset += PAGE_SIZE) {
-        create_mapping(p_kernel_pgd, ddr_start + offset, ddr_start + offset, PROT_NORMAL);
+    for (uint64_t pa = DDR_START; pa < DDR_END; pa += PAGE_SIZE) {
+        create_mapping(p_kernel_pgd, p2v(pa), pa, PROT_NORMAL);
     }
 
     // mapping Device Memory
     uint64_t uart_base = UART_BASE_ADDR;
-    create_mapping(p_kernel_pgd, uart_base, uart_base, PROT_DEVICE);
+    create_mapping(p_kernel_pgd, p2v(uart_base), uart_base, PROT_DEVICE);
+
+    asm volatile("dsb ish" ::: "memory");
 
     return p_kernel_pgd;
 }

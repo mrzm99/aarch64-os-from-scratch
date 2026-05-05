@@ -9,6 +9,7 @@
 /*------------------------------------------------------*/
 #include <stdint.h>
 #include "../include/util.h"
+#include "../include/config.h"
 #include "mm/pmm.h"
 #include "mm/vmm.h"
 
@@ -22,23 +23,34 @@ extern char vector_table_el1[];
  */
 void kernel_main()
 {
-    printk("Hello World\n");
+    printk("Hello from Higher Half!\n");
 
     pmm_init();
-
     printk("pmm_init() completed.\n");
 
     set_vector_table_el1((unsigned long)vector_table_el1);
-
     printk("set_vector_table_el1() completed.\n");
 
     pgd_t *p_pgd = setup_page_tables();
+    //printk("setup_page_tables() completed.\n");
 
-    printk("setup_page_tables() completed.\n");
+    uint64_t phys_pgd = v2p(p_pgd);
+    asm volatile (
+        "msr ttbr1_el1, %0\n"
+        "tlbi vmalle1is\n"
+        "dsb ish\n"
+        "isb\n"
+        :: "r"(phys_pgd) : "memory"
+    );
 
-    enable_mmu(p_pgd);
+    asm volatile (
+        "msr ttbr0_el1, xzr\n"
+        "tlbi vmalle1is\n"
+        "dsb ish\n"
+        "isb\n"
+    );
 
-    printk("enable_mmu() completed.\n");
+    printk("Switched to Full 4-level Page Table! TTBR0 is now disabled.\n");
 
     while (1);
 }

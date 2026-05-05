@@ -9,11 +9,12 @@
 /*------------------------------------------------------*/
 
 #include <stdint.h>
+#include "../../include/config.h"
 
 /*------------------------------------------------------*/
 /*! @brief  register base address
  */
-#define UART0_BASE              (0x09000000u)
+#define UART0_BASE              (0x09000000u + KERNEL_OFFSET)
 
 /*------------------------------------------------------*/
 /*! @brief  register structure

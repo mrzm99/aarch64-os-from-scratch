@@ -51,7 +51,7 @@ void pmm_init()
     // init root
     this->free_list_root.p_next = NULL;
 
-    for (uint64_t addr = free_start; addr < DDR_END; addr += PAGE_SIZE) {
+    for (uint64_t addr = free_start; addr < p2v(DDR_END); addr += PAGE_SIZE) {
         // make header
         struct page_header_t *p_header = (struct page_header_t*)addr;
 

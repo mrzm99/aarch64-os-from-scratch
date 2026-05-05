@@ -8,6 +8,8 @@
  */
 /*------------------------------------------------------*/
 
+KERNEL_OFFSET = 0xFFFF000000000000;
+
 /* entry point */
 ENTRY(_start)
 
@@ -20,27 +22,29 @@ PHDRS
 
 SECTIONS
 {
-    /* DDR address */
-    . = 0x40000000;
+    /* Virtual Memory Address */
+    . = 0x40080000 + KERNEL_OFFSET;
 
     /* text segment */
-    .text : {
+    .text : AT(ADDR(.text) - KERNEL_OFFSET) {
+        __text_start = .;
         *(.text.boot)
         *(.text)
+        __text_end = .;
     } :text_seg
 
     /* read only segment */
-    .rodata : {
+    .rodata : AT(ADDR(.rodata) - KERNEL_OFFSET) {
         *(.rodata)
     } :text_seg
 
     /* data segment */
-    .data : {
+    .data : AT(ADDR(.data) - KERNEL_OFFSET) {
         *(.data)
     } :data_seg
 
     /* bss segment */
-    .bss : {
+    .bss : AT(ADDR(.bss) - KERNEL_OFFSET) {
         . = ALIGN(8);
         __bss_start = .;
         *(.bss)
