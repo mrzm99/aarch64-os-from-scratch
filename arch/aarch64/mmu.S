@@ -8,26 +8,26 @@
  */
 /*------------------------------------------------------*/
 
-.global enable_mmu
+.global mmu_set_kernel_page_table
+.global mmu_invalidate_user_page_table
 
-enable_mmu:
-    ldr x1, =((0xFF << 8) | 0x00)
-    msr mair_el1, x1
-
-    ldr x1, =((16 << 0) | (0 << 14) | (1 << 8) | (1 << 10) | (3 << 12))
-    msr tcr_el1, x1
-
-    msr ttbr0_el1, x0
-
+/*------------------------------------------------------*/
+/*! @brief  void mmu_set_user_page_table(uint64_t pgd)
+ */
+mmu_set_kernel_page_table:
+    msr ttbr1_el1, x0
     tlbi vmalle1is
     dsb ish
     isb
-
-    mrs x1, sctlr_el1
-    orr x1, x1, #1
-    orr x1, x1, #(1<<2)
-    orr x1, x1, #(1<<12)
-    msr sctlr_el1, x1
-    isb
-
     ret
+
+/*------------------------------------------------------*/
+/*! @brief  void mmu_invalidate_user_page_table(void)
+ */
+mmu_invalidate_user_page_table:
+    msr ttbr0_el1, xzr
+    tlbi vmalle1is
+    dsb ish
+    isb
+    ret
+
