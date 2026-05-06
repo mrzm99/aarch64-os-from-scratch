@@ -15,19 +15,18 @@
 /*! @brief  void mmu_set_user_page_table(uint64_t pgd)
  */
 mmu_set_kernel_page_table:
-    msr ttbr1_el1, x0
-    tlbi vmalle1is
-    dsb ish
-    isb
-    ret
+    msr ttbr1_el1, x0               /* set ttbr1_el1       */
+    tlbi vmalle1is                  /* invalidate all TLB  */
+    dsb ish                         /* data barrier        */
+    isb                             /* instruction barrier */
+    ret                             /* return              */
 
 /*------------------------------------------------------*/
 /*! @brief  void mmu_invalidate_user_page_table(void)
  */
 mmu_invalidate_user_page_table:
-    msr ttbr0_el1, xzr
-    tlbi vmalle1is
-    dsb ish
-    isb
-    ret
-
+    msr ttbr0_el1, xzr              /* zero clear ttbr0_el1 */
+    tlbi vmalle1is                  /* invalidate all TLB   */
+    dsb ish                         /* data barrier         */
+    isb                             /* instruction barrier  */
+    ret                             /* return               */

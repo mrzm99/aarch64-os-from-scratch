@@ -13,22 +13,23 @@
 
 _start:
     mrs x1, mpidr_el1               /* read MPIDR_EL1 register  */
-    and x1, x1, #0xFF               /* extract Core ID          */
-    cbz x1, boot_core               /* jump boot process if core id is zero */
+    and x1, x1, #0xFF               /* get Core ID              */
+
+    cbz x1, boot_core               /* jump boot process if core id is zero (boot core) */
 
 halt:
-    wfe
+    wfe                             /* wait for event */
     b halt
 
 boot_core:
     msr daifset, #0xF               /* set Debug mask / SError mask / IRQ mask / FIQ mask bit */
-    msr spsel, #1                   /* selct SP_EL1 as stack pointer */
+    msr spsel, #1                   /* select SP_EL1 as stack pointer                         */
 
-    ldr x20, =0xFFFF000000000000    /* kernel address space offsert */
+    ldr x20, =0xFFFF000000000000    /* kernel address space offset */
 
-    ldr x0, =__stack_top            /* get stack pointer (virtual address) */
+    ldr x0, =__stack_top            /* get stack pointer (virtual address)         */
     sub x0, x0, x20                 /* convert virtual address to physical address */
-    mov sp, x0                      /* set stack pointer */
+    mov sp, x0                      /* set stack pointer                           */
 
     /* bss zero clear */
     ldr x0, =__bss_start            /* get bss segment start address               */
@@ -37,35 +38,35 @@ boot_core:
     sub x1, x1, x20                 /* convert virtual address to physical address */
 
 bss_clr_loop:
-    cmp x0, x1                      /* bss clear completed check */
-    b.ge build_early_pgt            /* jump to build_early_pgt */
+    cmp x0, x1                      /* bss clear completed check      */
+    b.ge build_early_pgt            /* jump to build_early_pgt        */
     str xzr, [x0], #8               /* zero clear and advance pointer */
-    b bss_clr_loop                  /* jump to bss_clr_loop */
+    b bss_clr_loop                  /* jump to bss_clr_loop           */
 
 build_early_pgt:
-    ldr x0, =boot_pgd               /* get pgd address */
+    ldr x0, =boot_pgd               /* get pgd address                             */
     sub x0, x0, x20                 /* convert virtual address to physical address */
-    ldr x1, =boot_pud               /* get pud address */
+    ldr x1, =boot_pud               /* get pud address                             */
     sub x1, x1, x20                 /* convert virtual address to physical address */
 
-    /* clear pgd (8K) */
+    /* clear pgd + pud(8K) */
     mov x2, x0
     mov x3, #8192
-clear_pgt:
+clear_pgd:
     str xzr, [x2], #8
     subs x3, x3, #8
-    b.ne clear_pgt
+    b.ne clear_pgd
 
     /* set 1G block to PUD[0] (Device Memory) */
     ldr x2, =0x6000000000000701     /* PXN=1, UXN=1, AF=1, Attr0 */
-    str x2, [x1, #0]                /* set PUD entry */
+    str x2, [x1, #0]                /* set PUD entry             */
 
-    /* sert 1G block t PUD[1] (Normal Memory) */
+    /* set 1G block t PUD[1] (Normal Memory) */
     ldr x2, =0x40000705             /* AF=1, SH=3, Attr1 */
-    str x2, [x1, #8]                /* set PUD entry */
+    str x2, [x1, #8]                /* set PUD entry     */
 
     orr x2, x1, #3                  /* x2 = PUD address (physical) | VALID(1) | TALBE(1) */
-    str x2, [x0, #0]                /* set PGD entry */
+    str x2, [x0, #0]                /* set PGD entry                                     */
 
     /* set mair_el1a*/
     ldr x1, =((0xFF << 8) | 0x00)
@@ -85,13 +86,13 @@ clear_pgt:
     isb
 
     mrs x1, sctlr_el1
-    orr x1, x1, #1
-    orr x1, x1, #(1<<2)
-    orr x1, x1, #(1<<12)
+    orr x1, x1, #1                  /* Enable the MMU           */
+    orr x1, x1, #(1<<2)             /* Data cache enable        */
+    orr x1, x1, #(1<<12)            /* Instruction cache enable */
     msr sctlr_el1, x1
     isb
 
-    ldr x0, =__stack_top
+    ldr x0, =__stack_top            /* set stack pointer (virtual address) */
     mov sp, x0
 
     /* jump to kernel main */

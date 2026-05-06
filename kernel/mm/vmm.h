@@ -50,8 +50,8 @@ typedef uint64_t pte_t;                     //!< Page Table Entry      (L3)
 /*------------------------------------------------------*/
 /*! @brief  Mask
  */
-#define PAGE_SHIFT_NUM              (12)                    //!< 
-#define PTRS_PER_PTE                (512)                   //!< 
+#define PAGE_SHIFT_NUM              (12)                    //!<
+#define PTRS_PER_PTE                (512)                   //!<
 #define PTE_INDEX_MASK              (PTRS_PER_PTE - 1)      //!<
 
 #define PAGE_MASK                   (~((1ULL << PAGE_SHIFT_NUM) - 1))
