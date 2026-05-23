@@ -59,7 +59,9 @@ typedef uint64_t pte_t;                     //!< Page Table Entry      (L3)
 /*------------------------------------------------------*/
 /*! @brief  ProtType
  */
+void vmm_init();
 pgd_t *setup_page_tables();
 void create_mapping(pgd_t *p_pgd, uint64_t va, uint64_t pa, uint64_t prot);
+void *ioremap(uint64_t pa, uint64_t size);
 
 #endif
