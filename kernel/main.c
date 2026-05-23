@@ -11,6 +11,7 @@
 #include "../include/util.h"
 #include "../include/config.h"
 #include "../arch/aarch64/mmu.h"
+#include "../arch/aarch64/uart.h"
 #include "mm/pmm.h"
 #include "mm/vmm.h"
 
@@ -33,9 +34,14 @@ void kernel_main()
     set_vector_table_el1((unsigned long)vector_table_el1);
     printk("set_vector_table_el1() completed.\n");
 
-    // set ttbl1_el1
+    //init virtual memory management
+    vmm_init();
+    printk("vmm_init() completed.\n");
+
+    // creating direct mapping
     pgd_t *p_pgd = setup_page_tables();
     printk("setup_page_tables() completed.\n");
+    printk("kernel pgd = 0x%x\n", (uint64_t)p_pgd);
 
     // update page table for kernel
     uint64_t phys_pgd = v2p(p_pgd);
@@ -44,7 +50,11 @@ void kernel_main()
     // invalidate unnecessary page table for user space
     mmu_invalidate_user_page_table();
 
+    // uart ioremap
+    uart_ioremap();
+
     printk("Switched to Full 4-level Page Table! TTBR0 is now disabled.\n");
+
 
     while (1);
 }

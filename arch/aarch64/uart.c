@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 #include "../../include/config.h"
+#include "../../kernel/mm/vmm.h"
 
 /*------------------------------------------------------*/
 /*! @brief  register base address
@@ -29,7 +30,7 @@ struct pl011_reg_t {
 /*------------------------------------------------------*/
 /*! @brief  base register
  */
-static struct pl011_reg_t * const p_reg_base = (struct pl011_reg_t *)UART0_BASE;
+static struct pl011_reg_t * p_reg_base = (struct pl011_reg_t *)UART0_BASE;
 
 /*------------------------------------------------------*/
 /*! @brief  send a character
@@ -54,4 +55,12 @@ void uart_puts(const char *str)
         uart_putc(*str);
         str++;
     }
+}
+
+/*------------------------------------------------------*/
+/*! @brief  remap base address
+ */
+void uart_ioremap()
+{
+    p_reg_base = (struct pl011_reg_t *)ioremap(UART0_BASE, PAGE_SIZE);
 }

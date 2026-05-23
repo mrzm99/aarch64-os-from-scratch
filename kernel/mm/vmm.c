@@ -10,10 +10,12 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 #include "vmm.h"
 #include "pmm.h"
 #include "../../include/config.h"
 #include "../../board/virt/board.h"
+#include "../../arch/aarch64/mmu.h"
 
 /*------------------------------------------------------*/
 /*! @brief  PTE index operation macro
@@ -22,6 +24,23 @@
 #define get_pud_idx(addr)           (((addr) >> 30) & (PTE_INDEX_MASK))
 #define get_pmd_idx(addr)           (((addr) >> 21) & (PTE_INDEX_MASK))
 #define get_pte_idx(addr)           (((addr) >> 12) & (PTE_INDEX_MASK))
+
+/*------------------------------------------------------*/
+/*! @brief  ioremap definition
+ */
+#define VMALLOC_START               (0xFFFF800000000000ULL)
+
+/*------------------------------------------------------*/
+/*! @brief  vmm control block
+ */
+struct vmm_ctrl_blk_t {
+    pgd_t *p_kernel_pgd;                    //!< kernel PGD addr
+    uint64_t next_vaddr;                    //!< pointer to empty vaddr
+};
+
+static struct vmm_ctrl_blk_t vmm_ctrl_blk;
+
+#define get_myself()        (&vmm_ctrl_blk)
 
 /*------------------------------------------------------*/
 /*! @brief  zero clear
@@ -38,6 +57,16 @@ static void memzero(void *p_start, uint64_t size)
         *p = 0;
         p++;
     }
+}
+
+/*------------------------------------------------------*/
+/*! @brief  init
+ */
+void vmmc_init()
+{
+    struct vmm_ctrl_blk_t *this = get_myself();
+
+    memzero(this, sizeof(struct vmm_ctrl_blk_t));
 }
 
 /*------------------------------------------------------*/
@@ -92,20 +121,55 @@ void create_mapping(pgd_t *p_pgd, uint64_t va, uint64_t pa, uint64_t prot)
  */
 pgd_t *setup_page_tables()
 {
+    struct vmm_ctrl_blk_t *this = get_myself();
+
     // get table for kernel PGD
     pgd_t *p_kernel_pgd = (pgd_t*)pmm_get_free_page();
     memzero(p_kernel_pgd, PAGE_SIZE);
 
-    // mapping Normal Memory (16M)
+    // mapping Normal Memory
     for (uint64_t pa = DDR_START; pa < DDR_END; pa += PAGE_SIZE) {
         create_mapping(p_kernel_pgd, p2v(pa), pa, PROT_NORMAL);
     }
 
-    // mapping Device Memory
-    uint64_t uart_base = UART_BASE_ADDR;
-    create_mapping(p_kernel_pgd, p2v(uart_base), uart_base, PROT_DEVICE);
-
     asm volatile("dsb ish" ::: "memory");
 
+    this->p_kernel_pgd = p_kernel_pgd;
+
     return p_kernel_pgd;
+}
+
+/*------------------------------------------------------*/
+/*! @brief  ioremap
+ */
+void *ioremap(uint64_t pa, uint64_t size)
+{
+    struct vmm_ctrl_blk_t *this = get_myself();
+
+    // check kernel PGD
+    if (this->p_kernel_pgd == NULL) {
+        return NULL;
+    }
+
+    // get phyaddr to map
+    uint64_t offset = pa % PAGE_SIZE;
+    uint64_t aligned_pa = pa - offset;
+    uint64_t aligned_size = ((size + offset + PAGE_SIZE - 1) / PAGE_SIZE) * PAGE_SIZE;
+
+    // get virtaddr to map
+    uint64_t va = this->next_vaddr;
+    this->next_vaddr += aligned_size;
+
+    // get attribute
+    uint64_t va_attr = PTE_VALID | PTE_PAGE | PTE_ATTR_INDEX0_DEVICE;
+
+    // mapping
+    for (uint64_t i = 0; i < aligned_size; i += PAGE_SIZE) {
+        create_mapping(this->p_kernel_pgd, va + i, aligned_pa, va_attr);
+    }
+
+    // flush TLB
+    flush_tlb_all();
+
+    return (void*)(va + offset);
 }
