@@ -12,6 +12,12 @@
 #define __UTIL_H__
 
 /*------------------------------------------------------*/
+/*! @brief  duplicate macro
+ */
+#define __stringify_1(x...)                     #x
+#define __stringify(x...)                       __stringify_1(x)
+
+/*------------------------------------------------------*/
 /*! @brief  print
  */
 void printk(const char *format, ...);
