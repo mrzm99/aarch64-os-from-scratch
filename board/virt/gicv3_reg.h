@@ -17,6 +17,9 @@
 #define GICD_BASE_PHYS                              (0x08000000U)
 #define GICR_BASE_PHYS                              (0x080A0000U)
 
+#define GICD_SIZE                                   (0x10000)
+#define GICR_SIZE_PER_CORE                          (0x20000)
+
 /*------------------------------------------------------*/
 /*! @brief  Distributor offset
  */
@@ -66,5 +69,11 @@
 #define ICC_IRGPEN1_EL1                             (S3_0_C12_C12_7)
 #define ICC_IAR1_EL1                                (S3_0_C12_C12_0)
 #define ICC_EOIR_EL1                                (S3_0_C12_C12_1)
+
+/*------------------------------------------------------*/
+/*! @brief  SPI
+ */
+#define SPI_NO_MIN                                  (32)
+#define SPI_NO_MAX                                  (1020)
 
 #endif
