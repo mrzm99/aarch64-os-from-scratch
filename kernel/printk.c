@@ -9,12 +9,13 @@
 /*------------------------------------------------------*/
 
 #include <stdarg.h>
+#include <stdint.h>
 #include "../arch/aarch64/uart.h"
 
 /*------------------------------------------------------*/
 /*! @brief  print number
  */
-static void print_number(unsigned int val, int base)
+static void print_number(uint64_t val, int base)
 {
     char buff[32];
     int i = 0;
@@ -64,14 +65,14 @@ void printk(const char *format, ...)
 
                 // 10 base integer
                 case 'd': {
-                    unsigned int val = va_arg(args, unsigned int);
+                    uint64_t val = va_arg(args, uint64_t);
                     print_number(val, 10);
                     break;
                 }
 
                 // 16 base integer
                 case 'x': {
-                    unsigned int val = va_arg(args, unsigned int);
+                    uint64_t val = va_arg(args, uint64_t);
                     print_number(val, 16);
                     break;
                 }
