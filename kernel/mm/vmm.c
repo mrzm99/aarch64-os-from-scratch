@@ -62,11 +62,13 @@ static void memzero(void *p_start, uint64_t size)
 /*------------------------------------------------------*/
 /*! @brief  init
  */
-void vmmc_init()
+void vmm_init()
 {
     struct vmm_ctrl_blk_t *this = get_myself();
 
     memzero(this, sizeof(struct vmm_ctrl_blk_t));
+
+    this->next_vaddr = VMALLOC_START;
 }
 
 /*------------------------------------------------------*/
@@ -161,11 +163,11 @@ void *ioremap(uint64_t pa, uint64_t size)
     this->next_vaddr += aligned_size;
 
     // get attribute
-    uint64_t va_attr = PTE_VALID | PTE_PAGE | PTE_ATTR_INDEX0_DEVICE;
+    uint64_t va_attr = PTE_VALID | PTE_PAGE | PTE_ATTR_INDEX0_DEVICE | PTE_AF;
 
     // mapping
     for (uint64_t i = 0; i < aligned_size; i += PAGE_SIZE) {
-        create_mapping(this->p_kernel_pgd, va + i, aligned_pa, va_attr);
+        create_mapping(this->p_kernel_pgd, va + i, aligned_pa + i, va_attr);
     }
 
     // flush TLB
