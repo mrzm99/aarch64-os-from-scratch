@@ -10,7 +10,7 @@
 #!/bin/bash
 
 qemu-system-aarch64 \
-    -M virt \
+    -M virt,gic-version=3 \
     -cpu cortex-a55 \
     -m 1024M \
     -nographic \
