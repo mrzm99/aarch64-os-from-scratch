@@ -64,16 +64,26 @@
 /*------------------------------------------------------*/
 /*! @brief  CPU Interface system register
  */
-#define ICC_SRE_EL1                                 (S3_0_C12_C15_5)
-#define ICC_PMR_EL1                                 (S3_0_C4_C6_0)
-#define ICC_IRGPEN1_EL1                             (S3_0_C12_C12_7)
-#define ICC_IAR1_EL1                                (S3_0_C12_C12_0)
-#define ICC_EOIR_EL1                                (S3_0_C12_C12_1)
+#define ICC_SRE_EL1                                 S3_0_C12_C12_5
+#define ICC_PMR_EL1                                 S3_0_C4_C6_0
+#define ICC_IRGPEN1_EL1                             S3_0_C12_C12_7
+#define ICC_IAR1_EL1                                S3_0_C12_C12_0
+#define ICC_EOIR_EL1                                S3_0_C12_C12_1
 
 /*------------------------------------------------------*/
-/*! @brief  SPI
+/*! @brief  Interrupt No
  */
+#define SGI_NO_MIN                                  (0)
+#define SGI_NO_MAX                                  (14)
+#define PPI_NO_MIN                                  (15)
+#define PPI_NO_MAX                                  (31)
 #define SPI_NO_MIN                                  (32)
 #define SPI_NO_MAX                                  (1020)
+
+/*------------------------------------------------------*/
+/*! @brief  Interrupt type
+ */
+#define LEVEL_SENSITVIE_VAL                         (0)
+#define EDGE_TRIGGER_VAL                            (2)
 
 #endif
