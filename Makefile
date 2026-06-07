@@ -21,7 +21,7 @@ BUILD_DIR = build
 # -ffreestanding: 標準ライブラリ(printfなど)が存在しない
 # -mgeneral-regs-only: 浮動小数点レジスタを使用しない
 CFLAGS = -Wall -O2 -ffreestanding -nostdlib -nostartfiles -mgeneral-regs-only
-LDFLAGS = -T scripts/linker_script.ld
+LDFLAGS = -T scripts/linker_script.ld -Map=$(BUILD_DIR)/kernel.map
 
 # ソースファイル
 ASM_SRCS = \
@@ -30,12 +30,14 @@ ASM_SRCS = \
 		   arch/aarch64/mmu.S
 
 C_SRCS = \
-		 kernel/main.c \
 		 arch/aarch64/uart.c \
+		 drivers/irq/gicv3.c \
+		 kernel/main.c \
 		 kernel/printk.c \
 		 kernel/exception.c \
 		 kernel/mm/pmm.c \
-		 kernel/mm/vmm.c
+		 kernel/mm/vmm.c \
+		 kernel/lib.c
 
 # オブジェクトファイル名の生成
 ASM_OBJS = $(patsubst %.S, $(BUILD_DIR)/%.o, $(ASM_SRCS))

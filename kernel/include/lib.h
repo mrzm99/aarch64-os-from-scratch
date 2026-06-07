@@ -1,20 +1,18 @@
 /*------------------------------------------------------*/
 /*!
- *      @file   uart.h
+ *      @file   lib.h
  *      @date   2026.xx.xx
  *      @author mrzm99
- *      @brief  uart for log during boot process
+ *      @brief  library
  *      @note
  */
 /*------------------------------------------------------*/
 
-#ifndef __UART_H__
-#define __UART_H__
+#ifndef __LIB_H__
+#define __LIB_H__
 
 #include <stdint.h>
 
-void uart_putc(char c);
-void uart_puts(const char *str);
-void uart_ioremap();
+void memset(void *p_start, uint8_t val, uint64_t size);
 
 #endif

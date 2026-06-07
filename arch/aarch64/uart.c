@@ -15,7 +15,7 @@
 /*------------------------------------------------------*/
 /*! @brief  register base address
  */
-#define UART0_BASE              (0x09000000u + KERNEL_OFFSET)
+#define UART0_BASE              (0x09000000u)
 
 /*------------------------------------------------------*/
 /*! @brief  register structure

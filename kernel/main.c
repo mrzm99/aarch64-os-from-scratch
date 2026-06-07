@@ -12,6 +12,7 @@
 #include "../include/config.h"
 #include "../arch/aarch64/mmu.h"
 #include "../arch/aarch64/uart.h"
+#include "../drivers/irq/gicv3.h"
 #include "mm/pmm.h"
 #include "mm/vmm.h"
 
@@ -24,7 +25,7 @@ extern char vector_table_el1[];
  */
 void kernel_main()
 {
-    printk("kernel_main() Initialize kernel start.\n");
+    printk("[%s:%] Initialize kernel start.\n", __FUNCTION__, __LINE__);
 
     // init physical memory management
     pmm_init();
@@ -47,14 +48,23 @@ void kernel_main()
     uint64_t phys_pgd = v2p(p_pgd);
     mmu_set_kernel_page_table(phys_pgd);
 
+    printk("set kernel page table\n");
+
     // invalidate unnecessary page table for user space
     mmu_invalidate_user_page_table();
 
     // uart ioremap
     uart_ioremap();
 
-    printk("Switched to Full 4-level Page Table! TTBR0 is now disabled.\n");
+    printk("uart_ioremap() completed.\n");
 
+    gicv3_init_global();
+
+    printk("gicv3_init_global() completed.\n");
+
+    gicv3_init_per_core();
+
+    printk("gicv3_init_per_core() completed.\n");
 
     while (1);
 }

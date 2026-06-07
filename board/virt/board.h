@@ -17,6 +17,8 @@
 #define DDR_END                 (0x5FFFFFFF)
 #define DDR_SIZE                (DDR_END - DDR_START)
 
+#define CORE_NUM                (4)
+
 #define UART_BASE_ADDR          (0x09000000)
 
 #endif
