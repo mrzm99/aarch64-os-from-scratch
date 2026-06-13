@@ -32,12 +32,15 @@ ASM_SRCS = \
 C_SRCS = \
 		 arch/aarch64/uart.c \
 		 drivers/irq/gicv3.c \
+		 drivers/timer/arm_timer.c \
 		 kernel/main.c \
 		 kernel/printk.c \
 		 kernel/exception.c \
 		 kernel/mm/pmm.c \
 		 kernel/mm/vmm.c \
-		 kernel/lib.c
+		 kernel/lib.c \
+		 kernel/irq.c \
+		 kernel/timer.c
 
 # オブジェクトファイル名の生成
 ASM_OBJS = $(patsubst %.S, $(BUILD_DIR)/%.o, $(ASM_SRCS))

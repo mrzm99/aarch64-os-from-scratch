@@ -15,6 +15,13 @@
 #include "../../include/util.h"
 
 /*------------------------------------------------------*/
+/*! @brief  Generic Timer
+ */
+#define CNTFRQ_EL0              cntfrq_el0          //!< Timer Frequency (Hz)
+#define CNTP_TVAL_EL0           cntp_tval_el0       //!< Timer Value
+#define CNTP_CTL_EL0            cntp_ctl_el0        //!< Control Register
+
+/*------------------------------------------------------*/
 /*! @brief  read system register macro
  */
 #define read_sysreg(reg) ({ \

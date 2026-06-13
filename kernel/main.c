@@ -13,6 +13,7 @@
 #include "../arch/aarch64/mmu.h"
 #include "../arch/aarch64/uart.h"
 #include "../drivers/irq/gicv3.h"
+#include "../drivers/timer/arm_timer.h"
 #include "mm/pmm.h"
 #include "mm/vmm.h"
 
@@ -58,13 +59,15 @@ void kernel_main()
 
     printk("uart_ioremap() completed.\n");
 
-    gicv3_init_global();
+    gicv3_init();
 
-    printk("gicv3_init_global() completed.\n");
+    printk("gicv3_init completed.\n");
 
-    gicv3_init_per_core();
+    arm_timer_init();
+    enable_exception();
 
-    printk("gicv3_init_per_core() completed.\n");
 
-    while (1);
+    while (1) {
+        asm volatile("wfi");
+    }
 }
