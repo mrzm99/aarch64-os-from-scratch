@@ -114,7 +114,8 @@ sync_el1:
 /* IRQ_EL1 */
 irq_el1:
     kernel_entry                                /* entry */
-    bl irq_el1_handler                          /* C handler */
+    mrs x0, S3_0_C12_C12_0                      /* get interrupt no (acknowledge) */
+    bl do_irq                                   /* C handler */
     kernel_exit                                 /* exit */
 
 /* FIQ_EL1 */
