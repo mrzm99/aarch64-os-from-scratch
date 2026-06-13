@@ -18,20 +18,37 @@
 #include "../../kernel/mm/vmm.h"
 #include "../../kernel/include/lib.h"
 #include "../../include/type.h"
+#include "../../kernel/include/irq.h"
 
 /*------------------------------------------------------*/
 /*! @brief  GICv3 control block
  */
 typedef struct {
-    irq_handler_t irq_handler_list[INT_ID_MAX];         //!< IRQ Handler List
-    void *dev_id_list[INT_ID_MAX];                      //!< dev_id_list
-
     volatile uint8_t *p_gicd_base;                      //!< GICD base address
     volatile uint8_t *p_gicr_base;                      //!< GICR base address
 } gicv3_ctrl_blk_t;
 
 static gicv3_ctrl_blk_t gicv3_ctrl_blk;
 #define get_myself()            (&gicv3_ctrl_blk)
+
+/*------------------------------------------------------*/
+/*! @brief  Prototype
+ */
+static void gicv3_irq_unmask(uint32_t irq_no);
+static void gicv3_irq_mask(uint32_t irq_no);
+static int gicv3_irq_set_type(uint32_t irq_no, uint32_t type);
+static void gicv3_irq_eoi(uint32_t irq_no);
+
+/*------------------------------------------------------*/
+/*! @brief  Chip Structure for GICv3
+ */
+static struct irq_chip gicv3_chip = {
+    .name = "GICv3 Chip",
+    .irq_unmask = gicv3_irq_unmask,
+    .irq_mask = gicv3_irq_mask,
+    .irq_eoi = gicv3_irq_eoi,
+    .irq_set_type = gicv3_irq_set_type,
+};
 
 /*------------------------------------------------------*/
 /*! @brief  get GICR base address per core
@@ -47,6 +64,105 @@ static volatile uint8_t *get_my_gicr_base(void)
     uint32_t core_id = mpidr & 0xFF;
 
     return this->p_gicr_base + (core_id * GICR_SIZE_PER_CORE);
+}
+
+/*------------------------------------------------------*/
+/*! @brief  Enable Interrupt
+ */
+static void gicv3_irq_unmask(uint32_t irq_no)
+{
+    gicv3_ctrl_blk_t *this = get_myself();
+    volatile uint8_t *my_gicr_base = get_my_gicr_base();
+
+    if (irq_no > SPI_NO_MAX) {
+        return;
+    }
+
+    uint32_t bit_pos = 1 << (irq_no % 32);
+
+    if (irq_no <= PPI_NO_MAX) {
+        set_reg_t(uint32_t, my_gicr_base + GICR_ISENABLER0, bit_pos);
+    } else {
+        uint32_t offset = irq_no / 32;
+        set_reg_t(uint32_t, this->p_gicd_base + GICD_ISENABLER + (offset * 4), bit_pos);
+    }
+}
+
+/*------------------------------------------------------*/
+/*! @brief  Disable Interrupt
+ */
+static void gicv3_irq_mask(uint32_t irq_no)
+{
+    gicv3_ctrl_blk_t *this = get_myself();
+    volatile uint8_t *my_gicr_base = get_my_gicr_base();
+
+    if (irq_no > SPI_NO_MAX) {
+        return;
+    }
+
+    uint32_t bit_pos = 1 << (irq_no % 32);
+
+    if (irq_no <= PPI_NO_MAX) {
+        set_reg_t(uint32_t, my_gicr_base + GICR_ICENABLER0, bit_pos);
+    } else {
+        uint32_t offset = irq_no / 32;
+        set_reg_t(uint32_t, this->p_gicd_base + GICD_ICENABLER + (offset * 4), bit_pos);
+    }
+}
+
+/*------------------------------------------------------*/
+/*! @brief  Set Interrupt Trigger Type
+ */
+static int gicv3_irq_set_type(uint32_t irq_no, uint32_t type)
+{
+    gicv3_ctrl_blk_t *this = get_myself();
+
+    if (irq_no > SPI_NO_MAX) {
+        return -1;
+    }
+
+    // PPI
+    if ((irq_no >= PPI_NO_MIN) && (irq_no <= PPI_NO_MAX)) {
+        volatile uint8_t *my_gicr_base = get_my_gicr_base();
+        uint32_t shift_num = ((irq_no - 16) % 16) * 2;
+        uint32_t val = get_reg_t(uint32_t, my_gicr_base + GICR_ICFGR1);
+
+        val &= ~(3 << shift_num);
+        val |= (type == IRQ_TYPE_EDGE ? IRQ_TYPE_EDGE : IRQ_TYPE_LEVEL) << shift_num;
+        set_reg_t(uint32_t, my_gicr_base + GICR_ICFGR1, val);
+
+    // SPI
+    } else {
+        uint32_t offset = (irq_no / 16) * 4;
+        uint32_t shift_num = (irq_no % 16) * 2;
+        uint32_t val = get_reg_t(uint32_t, this->p_gicd_base + GICD_ICFGR + offset);
+
+        val &= ~(3 << shift_num);
+        val |= (type == IRQ_TYPE_EDGE ? IRQ_TYPE_EDGE : IRQ_TYPE_LEVEL) << shift_num;
+        set_reg_t(uint32_t, this->p_gicd_base + GICD_ICFGR + offset, val);
+    }
+
+    return 0;
+}
+
+/*------------------------------------------------------*/
+/*! @brief  Notify End of Interrupt
+ */
+static void gicv3_irq_eoi(uint32_t irq_no)
+{
+    if (irq_no > SPI_NO_MAX) {
+        return;
+    }
+
+    write_sysreg(irq_no, ICC_EOIR_EL1);
+}
+
+/*------------------------------------------------------*/
+/*! @brief  Acknowledge Interrupt
+ */
+uint32_t gicv3_acknowledge_irq(void)
+{
+    return read_sysreg(ICC_IAR1_EL1);
 }
 
 /*------------------------------------------------------*/
@@ -138,132 +254,12 @@ void gicv3_init_per_core(void)
 }
 
 /*------------------------------------------------------*/
-/*! @brief  Resigter IRQ information
+/*! @brief  GICv3 Init
  */
-int gicv3_register_irq_hadler(uint32_t int_no, irq_handler_t handler, uint8_t priority, uint32_t flags, void *dev_id)
+void gicv3_init(void)
 {
-    gicv3_ctrl_blk_t *this = get_myself();
+    gicv3_init_global();
+    gicv3_init_per_core();
 
-    // check argments
-    if ((int_no > SPI_NO_MAX) || (handler == NULL)) {
-        return -1;
-    }
-
-    if (flags >= IRQ_TRIGGER_MAX) {
-        return -1;
-    }
-
-    // register handler
-    this->irq_handler_list[int_no] = handler;
-    this->dev_id_list[int_no] = dev_id;
-
-    // set interrupt type
-    if ((int_no >= PPI_NO_MIN) && (int_no <= PPI_NO_MAX)) {
-        uint32_t shift_num = ((int_no - 16) % 16) * 2;
-        uint32_t val = get_reg_t(uint32_t, this->p_gicr_base + GICR_ICFGR1);
-
-        val &= ~(3 << shift_num);
-        val |= (flags == IRQ_TRIGGER_EDGE ? EDGE_TRIGGER_VAL : LEVEL_SENSITVIE_VAL) << shift_num;
-        set_reg_t(uint32_t, this->p_gicr_base + GICR_ICFGR1, val);
-
-    } else if ((int_no >= SPI_NO_MIN) && (int_no <= SPI_NO_MAX)){
-        uint32_t offset = (int_no / 16) * 4;
-        uint32_t shift_num = (int_no % 16) * 2;
-        uint32_t val = get_reg_t(uint32_t, this->p_gicd_base + GICD_ICFGR + offset);
-
-        val &= ~(3 << shift_num);
-        val |= (flags == IRQ_TRIGGER_EDGE ? EDGE_TRIGGER_VAL : LEVEL_SENSITVIE_VAL) << shift_num;
-        set_reg_t(uint32_t, this->p_gicr_base + GICD_ICFGR + offset, val);
-
-    } else {
-        // nope
-    }
-
-    // set prioripty
-    if (int_no < PPI_NO_MAX) {
-        set_reg_t(uint8_t, this->p_gicr_base + int_no, priority);
-    } else {
-        set_reg_t(uint8_t, this->p_gicd_base + int_no, priority);
-    }
-
-    return 0;
-}
-
-/*------------------------------------------------------*/
-/*! @brief  Enable specifed interrupt
- */
-void gicv3_enable_irq(uint32_t int_no)
-{
-    gicv3_ctrl_blk_t *this = get_myself();
-
-    // get my own GICR base address
-    volatile uint8_t *my_gicr_base = get_my_gicr_base();
-
-    // check interrupt no
-    if (int_no > SPI_NO_MAX) {
-        return;
-    }
-
-    // get bit position
-    uint32_t bit_pos = 1 << (int_no % 32);
-
-    // set Redistributor if the interrupt is SGI or PPI
-    if (int_no <= PPI_NO_MAX) {
-        set_reg_t(uint32_t, my_gicr_base + GICR_ISENABLER0, bit_pos);
-
-    // set Distributor if the interrupt is SPI
-    } else {
-        uint32_t offset = int_no / 32;
-        set_reg_t(uint32_t, this->p_gicd_base + GICD_ISENABLER + offset, bit_pos);
-    }
-}
-
-/*------------------------------------------------------*/
-/*! @brief  Disable specified interrupt
- */
-void gicv3_disable_irq(uint32_t int_no)
-{
-    gicv3_ctrl_blk_t *this = get_myself();
-
-    // get my own GICR base address
-    volatile uint8_t *my_gicr_base = get_my_gicr_base();
-
-    // check interrupt no
-    if (int_no > SPI_NO_MAX) {
-        return;
-    }
-
-    // get bit position
-    uint32_t bit_pos = 1 << (int_no % 32);
-
-    // set Redistributor if the interrupt is SGI or PPI
-    if (int_no <= PPI_NO_MAX) {
-        set_reg_t(uint32_t, my_gicr_base + GICR_ICENABLER0, bit_pos);
-
-    // set Distributor if the interrupt is SPI
-    } else {
-        uint32_t offset = int_no / 32;
-        set_reg_t(uint32_t, this->p_gicd_base + GICD_ICENABLER + offset, bit_pos);
-    }
-}
-
-/*------------------------------------------------------*/
-/*! @brief  Get interrupt no
- */
-uint32_t gicv3_acknowledge_irq(void)
-{
-    return read_sysreg(ICC_IAR1_EL1);
-}
-
-/*------------------------------------------------------*/
-/*! @brief  Send EOI
- */
-void gicv3_end_of_irq(uint32_t int_no)
-{
-    // check interrup no
-    if (int_no > SPI_NO_MAX) {
-        return;
-    }
-
-    write_sysreg(int_no, ICC_EOIR_EL1);
+    irq_set_chip(0, SPI_NO_MAX, &gicv3_chip);
 }

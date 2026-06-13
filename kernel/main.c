@@ -58,13 +58,10 @@ void kernel_main()
 
     printk("uart_ioremap() completed.\n");
 
-    gicv3_init_global();
+    gicv3_init();
 
-    printk("gicv3_init_global() completed.\n");
+    printk("gicv3_init completed.\n");
 
-    gicv3_init_per_core();
-
-    printk("gicv3_init_per_core() completed.\n");
 
     while (1);
 }
