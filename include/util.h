@@ -25,9 +25,7 @@ void printk(const char *format, ...);
 /*------------------------------------------------------*/
 /*! @brief  excpetion operate
  */
-void enable_exception();
-void disable_exception();
-void set_vector_table_el(unsigned long vector_table);
+extern void set_vector_table_el(unsigned long vector_table);
 
 /*------------------------------------------------------*/
 /*! @brief  do memory align

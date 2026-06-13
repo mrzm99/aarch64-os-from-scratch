@@ -7,19 +7,42 @@
  *      @note
  */
 /*------------------------------------------------------*/
+#include <stdio.h>
 #include <stdint.h>
 #include "../include/util.h"
 #include "../include/config.h"
 #include "../arch/aarch64/mmu.h"
 #include "../arch/aarch64/uart.h"
+#include "../arch/aarch64/cpu.h"
 #include "../drivers/irq/gicv3.h"
 #include "../drivers/timer/arm_timer.h"
+#include "include/kernel.h"
 #include "mm/pmm.h"
 #include "mm/vmm.h"
 
-extern void enable_exception();
 extern void set_vector_table_el1(unsigned long vector_table_el1);
 extern char vector_table_el1[];
+
+/*------------------------------------------------------*/
+/*! @brief  Test Task A
+ */
+static void task_a_main(void)
+{
+    while (1) {
+        printk("Task A is running...\n");
+        for (volatile int i = 0; i < 10000000; i++);
+    }
+}
+/*------------------------------------------------------*/
+/*! @brief  Test Task B
+ */
+static void task_b_main(void)
+{
+    while (1) {
+        printk("Task B is running...\n");
+        for (volatile int i = 0; i < 10000000; i++);
+    }
+}
 
 /*------------------------------------------------------*/
 /*! @brief  kernel entry point
@@ -63,9 +86,15 @@ void kernel_main()
 
     printk("gicv3_init completed.\n");
 
+    task_init();
+    create_task(NULL);
+    current = task[0];
+
+    create_task(task_a_main);
+    create_task(task_b_main);
+
     arm_timer_init();
     enable_exception();
-
 
     while (1) {
         asm volatile("wfi");

@@ -27,7 +27,8 @@ LDFLAGS = -T scripts/linker_script.ld -Map=$(BUILD_DIR)/kernel.map
 ASM_SRCS = \
 		   arch/aarch64/boot.S \
 		   arch/aarch64/exception.S \
-		   arch/aarch64/mmu.S
+		   arch/aarch64/mmu.S \
+		   arch/aarch64/switch.S
 
 C_SRCS = \
 		 arch/aarch64/uart.c \
@@ -40,7 +41,8 @@ C_SRCS = \
 		 kernel/mm/vmm.c \
 		 kernel/lib.c \
 		 kernel/irq.c \
-		 kernel/timer.c
+		 kernel/schedule.c \
+		 kernel/task.c
 
 # オブジェクトファイル名の生成
 ASM_OBJS = $(patsubst %.S, $(BUILD_DIR)/%.o, $(ASM_SRCS))
