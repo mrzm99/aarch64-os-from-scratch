@@ -16,4 +16,14 @@ static inline void issue_isb(void)
     asm volatile("isb");
 }
 
+inline void enable_exception(void)
+{
+    asm volatile("msr daifclr, #0x3");
+}
+
+inline void disable_exception(void)
+{
+    asm volatile("msr daifset, #0xF");
+}
+
 #endif
