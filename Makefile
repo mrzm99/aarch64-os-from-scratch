@@ -39,6 +39,7 @@ C_SRCS = \
 		 kernel/exception.c \
 		 kernel/mm/pmm.c \
 		 kernel/mm/vmm.c \
+		 kernel/mm/allocator/free_list.c \
 		 kernel/lib.c \
 		 kernel/irq.c \
 		 kernel/schedule.c \
