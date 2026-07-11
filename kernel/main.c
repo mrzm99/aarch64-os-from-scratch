@@ -19,6 +19,7 @@
 #include "include/kernel.h"
 #include "mm/pmm.h"
 #include "mm/vmm.h"
+#include "mm/allocator/kmalloc.h"
 
 extern void set_vector_table_el1(unsigned long vector_table_el1);
 extern char vector_table_el1[];
@@ -94,7 +95,31 @@ void kernel_main()
     create_task(task_b_main);
 
     arm_timer_init();
-    enable_exception();
+    //enable_exception();
+
+    kmalloc_init();
+    printk("---------------------------------------------------------\n");
+    uint64_t *p_mem = kmalloc_malloc(sizeof(uint64_t));
+    printk("p_mem = %x\n", (uint64_t)p_mem);
+
+    printk("---------------------------------------------------------\n");
+    p_mem = kmalloc_malloc(sizeof(uint64_t));
+    printk("p_mem = %x\n", (uint64_t)p_mem);
+    kmalloc_free(p_mem);
+
+    printk("---------------------------------------------------------\n");
+    p_mem = kmalloc_malloc(sizeof(uint64_t));
+    printk("p_mem = %x\n", (uint64_t)p_mem);
+    kmalloc_free(p_mem);
+
+    printk("---------------------------------------------------------\n");
+    p_mem = kmalloc_malloc(sizeof(uint64_t));
+    printk("p_mem = %x\n", (uint64_t)p_mem);
+    kmalloc_free(p_mem);
+
+    printk("---------------------------------------------------------\n");
+
+    printk("kernel main completed.\n");
 
     while (1) {
         asm volatile("wfi");
