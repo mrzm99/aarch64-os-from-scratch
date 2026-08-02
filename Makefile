@@ -43,7 +43,8 @@ C_SRCS = \
 		 kernel/mm/allocator/free_list.c \
 		 kernel/irq.c \
 		 kernel/schedule.c \
-		 kernel/task.c
+		 kernel/task.c \
+		 kernel/queue.c
 
 # オブジェクトファイル名の生成
 ASM_OBJS = $(patsubst %.S, $(BUILD_DIR)/%.o, $(ASM_SRCS))
