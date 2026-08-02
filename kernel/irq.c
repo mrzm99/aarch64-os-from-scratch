@@ -13,7 +13,7 @@
 
 #include "include/irq.h"
 #include "../include/util.h"
-#include "include/lib.h"
+#include "../lib/include/lib.h"
 
 /*------------------------------------------------------*/
 /*! @brief  Macro
