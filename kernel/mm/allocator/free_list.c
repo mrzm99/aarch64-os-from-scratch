@@ -9,7 +9,7 @@
 /*------------------------------------------------------*/
 
 #include "kmalloc.h"
-#include "../../include/lib.h"
+#include "../../../lib/include/lib.h"
 #include "../pmm.h"
 #include "../../../include/config.h"
 #include "../../../include/type.h"

@@ -34,13 +34,13 @@ C_SRCS = \
 		 arch/aarch64/uart.c \
 		 drivers/irq/gicv3.c \
 		 drivers/timer/arm_timer.c \
+		 lib/lib.c \
 		 kernel/main.c \
 		 kernel/printk.c \
 		 kernel/exception.c \
 		 kernel/mm/pmm.c \
 		 kernel/mm/vmm.c \
 		 kernel/mm/allocator/free_list.c \
-		 kernel/lib.c \
 		 kernel/irq.c \
 		 kernel/schedule.c \
 		 kernel/task.c

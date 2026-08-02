@@ -16,7 +16,7 @@
 #include "../../arch/aarch64/sysregs.h"
 #include "../../arch/aarch64/cpu.h"
 #include "../../kernel/mm/vmm.h"
-#include "../../kernel/include/lib.h"
+#include "../../lib/include/lib.h"
 #include "../../include/type.h"
 #include "../../kernel/include/irq.h"
 

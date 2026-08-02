@@ -13,7 +13,7 @@
 
 #include "include/kernel.h"
 #include "../include/config.h"
-#include "include/lib.h"
+#include "../lib/include/lib.h"
 #include "../include/util.h"
 #include "mm/pmm.h"
 
